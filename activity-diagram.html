@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Activity Diagram – AI-Driven Companion Web App × Ecount ERP</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Noto Sans", "Inter", system-ui, sans-serif;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 32px;
+  }
+  header.page { margin-bottom: 20px; }
+  .eyebrow {
+    font-size: 13px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: #6366f1; margin-bottom: 8px;
+  }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+  .page .sub { margin-top: 6px; font-size: 15px; color: #64748b; }
+  .wrap { overflow-x: auto; border: 1px solid #cbd5e1; border-radius: 10px; }
+  svg { display: block; background: #eaf1fb; }
+</style>
+</head>
+<body>
+  <header class="page">
+    <div class="eyebrow">AI-Driven Companion Web App × Ecount ERP</div>
+    <h1>Activity Diagram</h1>
+    <p class="sub">Swimlane: Pengguna Internal · Sistem (Ecount + AI Engine) · Mitra Eksternal · Manajemen / Approver</p>
+  </header>
+  <div class="wrap"><div id="diagram"></div></div>
+
+<script>
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, a = {}, t) { const n = document.createElementNS(SVGNS, tag);
+  for (const k in a) n.setAttribute(k, a[k]); if (t != null) n.textContent = t; return n; }
+function wrap(text, max) {
+  const w = text.split(" "); const lines = []; let l = "";
+  for (const x of w) { if ((l + " " + x).trim().length > max) { if (l) lines.push(l); l = x; } else l = (l + " " + x).trim(); }
+  if (l) lines.push(l); return lines;
+}
+
+/* ---------- Lanes ---------- */
+const LANES = [
+  { id: "user",  title: "Pengguna Internal" },
+  { id: "sys",   title: "Sistem (Ecount + AI Engine)" },
+  { id: "ext",   title: "Mitra Eksternal" },
+  { id: "mgmt",  title: "Manajemen / Approver" },
+];
+const LANE_W = 300;
+const HEAD_H = 46;
+const PAD_TOP = HEAD_H + 24;
+const ROW = 78;              // jarak vertikal antar baris
+const svgW = LANES.length * LANE_W;
+
+/* lane -> x tengah */
+const laneX = i => i * LANE_W + LANE_W / 2;
+const laneIndex = id => LANES.findIndex(l => l.id === id);
+
+/* ---------- Nodes ----------
+   type: start | end | action | decision
+   lane: id lane
+   row:  posisi baris (float diperbolehkan)
+   label: teks
+*/
+const N = {};
+let maxRow = 0;
+function node(key, type, lane, row, label) {
+  N[key] = { key, type, lane, row, label, x: laneX(laneIndex(lane)), y: PAD_TOP + row * ROW };
+  if (row > maxRow) maxRow = row;
+  return N[key];
+}
+
+/* ======== DEFINISI ALUR (ringkas, mewakili 12 UC) ======== */
+let r = 0;
+node("start",   "start",  "user", r,       "");
+node("login",   "action", "user", r += 1,  "Login ke aplikasi");
+node("auth",    "action", "sys",  r,        "Autentikasi & tarik data dari Ecount (API)");
+node("dash",    "action", "sys",  r += 1,   "Menampilkan Dashboard Eksekutif (UC-01)");
+
+node("dec1",    "decision","user", r += 1,  "Pilih aktivitas?");
+
+/* --- Cabang A: Forecast & Alert stok (UC-02) --- */
+node("a1",      "action", "sys",  r += 1,   "AI mengolah riwayat penjualan → forecast (UC-02)");
+node("a2",      "action", "sys",  r += 1,   "Menampilkan prediksi & kirim alert restock");
+node("a3",      "action", "mgmt", r,        "Purchasing meninjau alert");
+
+/* --- Cabang B: Penawaran Vendor (UC-03) --- */
+node("b1",      "action", "ext",  r += 1,   "Vendor input harga penawaran (UC-03)");
+node("b2",      "action", "sys",  r,        "AI mengurutkan penawaran vendor");
+node("b3",      "decision","mgmt",r += 1,   "Purchasing setuju?");
+node("b4",      "action", "sys",  r += 1,   "Membuat Pesanan Pembelian di Ecount");
+
+/* --- Cabang C: Perpindahan stok (UC-04) --- */
+node("c1",      "action", "sys",  r += 1,   "Sistem deteksi stok tak seimbang → draf (UC-04)");
+node("c2",      "decision","mgmt",r += 1,   "Kepala Gudang setuju?");
+node("c3",      "action", "sys",  r += 1,   "Sinkronkan perpindahan stok ke Ecount");
+
+/* --- Cabang D: Stock Opname (UC-05) & QC (UC-06) --- */
+node("d1",      "action", "user", r += 1,   "Scan barcode & input jumlah (UC-05)");
+node("d2",      "action", "sys",  r,        "Validasi & sinkron stok ke Ecount");
+node("d3",      "action", "user", r += 1,   "Input cacat & nomor batch (UC-06)");
+node("d4",      "action", "sys",  r,        "AI kelompokkan pola cacat → laporan mitigasi");
+
+/* --- Cabang E: Mitra eksternal (UC-07,08,09) --- */
+node("e1",      "action", "ext",  r += 1,   "Ajukan klaim garansi / pesan B2B / tanya chatbot");
+node("e2",      "action", "sys",  r,        "Validasi faktur, proses order, jawab via data Ecount");
+node("e3",      "decision","sys", r += 1,   "Faktur / stok valid?");
+node("e4",      "action", "sys",  r += 1,   "Terbitkan RMA / Pesanan Penjualan masuk Ecount");
+
+/* --- Cabang F: Klien berisiko & KPI (UC-10, UC-11) --- */
+node("f1",      "action", "sys",  r += 1,   "AI analisis komplain & jeda → skor risiko (UC-10)");
+node("f2",      "action", "user", r,        "Sales tindak lanjuti klien & pantau KPI (UC-11)");
+
+/* --- Cabang G: Tugas lintas divisi (UC-12) --- */
+node("g1",      "action", "user", r += 1,   "Buat kartu tugas & tautkan anggaran (UC-12)");
+node("g2",      "action", "sys",  r,        "Diskusi, update status & simpan ke Ecount");
+
+node("end",     "end",    "user", r += 1,   "");
+
+/* ======== EDGES ======== */
+/* from, to, label(opsional), via: 'h'(horizontal dulu) | 'v'(vertikal dulu) | 'auto' */
+const E = [
+  ["start","login"],
+  ["login","auth"],
+  ["auth","dash"],
+  ["dash","dec1"],
+
+  ["dec1","a1","[forecast]"],
+  ["a1","a2"],
+  ["a2","a3"],
+  ["a3","b1"],
+
+  ["b1","b2"],
+  ["b2","b3"],
+  ["b3","b4","[ya]"],
+  ["b4","c1"],
+
+  ["c1","c2"],
+  ["c2","c3","[ya]"],
+  ["c3","d1"],
+
+  ["d1","d2"],
+  ["d2","d3"],
+  ["d3","d4"],
+  ["d4","e1"],
+
+  ["e1","e2"],
+  ["e2","e3"],
+  ["e3","e4","[ya]"],
+  ["e4","f1"],
+
+  ["f1","f2"],
+  ["f2","g1"],
+
+  ["g1","g2"],
+  ["g2","end"],
+];
+
+const svgH = PAD_TOP + (maxRow + 1.2) * ROW + 30;
+
+/* ---------- RENDER ---------- */
+const svg = el("svg", { viewBox: `0 0 ${svgW} ${svgH}`, width: svgW, height: svgH });
+
+/* arrow marker */
+const defs = el("defs");
+const mk = el("marker", { id: "arrow", viewBox: "0 0 10 10", refX: 9, refY: 5,
+  markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" });
+mk.append(el("path", { d: "M0,0 L10,5 L0,10 z", fill: "#334155" }));
+defs.append(mk);
+svg.append(defs);
+
+/* lane backgrounds + headers + separators */
+LANES.forEach((lane, i) => {
+  const x = i * LANE_W;
+  svg.append(el("rect", { x, y: 0, width: LANE_W, height: svgH,
+    fill: i % 2 ? "#e3edfa" : "#eaf1fb" }));
+  svg.append(el("rect", { x, y: 0, width: LANE_W, height: HEAD_H,
+    fill: "#dbe6f6", stroke: "#9db4d4", "stroke-width": 1 }));
+  svg.append(el("text", { x: x + LANE_W / 2, y: HEAD_H / 2 + 5, "text-anchor": "middle",
+    "font-size": 15, "font-weight": 700, fill: "#1e293b" }, lane.title));
+  if (i > 0) svg.append(el("line", { x1: x, y1: 0, x2: x, y2: svgH,
+    stroke: "#9db4d4", "stroke-width": 1 }));
+});
+svg.append(el("rect", { x: 0, y: 0, width: svgW, height: svgH, fill: "none",
+  stroke: "#9db4d4", "stroke-width": 1 }));
+
+/* helper: titik tepi node untuk edge */
+const ACT_W = 150, ACT_H = 44, DEC = 46, DOT = 15;
+function anchor(n, dir) { // dir: top/bottom/left/right
+  let hw, hh;
+  if (n.type === "action") { hw = ACT_W / 2; hh = ACT_H / 2; }
+  else if (n.type === "decision") { hw = DEC; hh = DEC; }
+  else { hw = DOT; hh = DOT; }
+  switch (dir) {
+    case "top": return { x: n.x, y: n.y - hh };
+    case "bottom": return { x: n.x, y: n.y + hh };
+    case "left": return { x: n.x - hw, y: n.y };
+    case "right": return { x: n.x + hw, y: n.y };
+  }
+}
+
+/* gambar edges dulu (di belakang node) */
+E.forEach(([f, t, label]) => {
+  const a = N[f], b = N[t];
+  const sameLane = a.lane === b.lane;
+  let p1, p2, d;
+  if (sameLane) {
+    p1 = anchor(a, "bottom"); p2 = anchor(b, "top");
+    d = `M${p1.x},${p1.y} L${p2.x},${p2.y}`;
+  } else {
+    // keluar dari sisi (kiri/kanan) menuju lane target, lalu masuk atas target
+    const goRight = b.x > a.x;
+    p1 = anchor(a, goRight ? "right" : "left");
+    p2 = anchor(b, "top");
+    const midY = p1.y;
+    d = `M${p1.x},${p1.y} L${p2.x},${midY} L${p2.x},${p2.y}`;
+  }
+  svg.append(el("path", { d, fill: "none", stroke: "#334155",
+    "stroke-width": 1.6, "marker-end": "url(#arrow)" }));
+  if (label) {
+    const lx = sameLane ? (p1.x + 8) : ((p1.x + p2.x) / 2);
+    const ly = sameLane ? (p1.y + p2.y) / 2 : p1.y - 6;
+    svg.append(el("text", { x: lx, y: ly, "text-anchor": "middle",
+      "font-size": 12, "font-style": "italic", fill: "#1e3a8a" }, label));
+  }
+});
+
+/* gambar nodes */
+Object.values(N).forEach(n => {
+  if (n.type === "start" || n.type === "end") {
+    svg.append(el("circle", { cx: n.x, cy: n.y, r: n.type === "start" ? 11 : 13,
+      fill: n.type === "start" ? "#1e293b" : "#fff", stroke: "#1e293b", "stroke-width": 2.5 }));
+    if (n.type === "end")
+      svg.append(el("circle", { cx: n.x, cy: n.y, r: 6, fill: "#1e293b" }));
+  } else if (n.type === "action") {
+    svg.append(el("rect", { x: n.x - ACT_W / 2, y: n.y - ACT_H / 2, width: ACT_W, height: ACT_H,
+      rx: 12, fill: "#ffffff", stroke: "#64748b", "stroke-width": 1.6 }));
+    const lines = wrap(n.label, 24);
+    const sy = n.y - (lines.length - 1) * 7;
+    lines.forEach((ln, i) => svg.append(el("text", { x: n.x, y: sy + i * 14 + 4,
+      "text-anchor": "middle", "font-size": 11.5, fill: "#0f172a" }, ln)));
+  } else if (n.type === "decision") {
+    svg.append(el("polygon", {
+      points: `${n.x},${n.y - DEC} ${n.x + DEC},${n.y} ${n.x},${n.y + DEC} ${n.x - DEC},${n.y}`,
+      fill: "#fff", stroke: "#64748b", "stroke-width": 1.6 }));
+    const lines = wrap(n.label, 14);
+    const sy = n.y - (lines.length - 1) * 7;
+    lines.forEach((ln, i) => svg.append(el("text", { x: n.x, y: sy + i * 13 + 4,
+      "text-anchor": "middle", "font-size": 11, fill: "#0f172a" }, ln)));
+  }
+});
+
+document.getElementById("diagram").append(svg);
+</script>
+</body>
+</html>
