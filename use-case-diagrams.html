@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Use Case Diagram per Kategori – AI-Driven Companion Web App × Ecount ERP</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Noto Sans", "Inter", system-ui, sans-serif;
+    background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 45%, #ecfeff 100%);
+    color: #0f172a;
+    padding: 40px;
+  }
+  header.page { text-align: center; margin-bottom: 32px; }
+  .eyebrow {
+    font-size: 14px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: #6366f1; margin-bottom: 10px;
+  }
+  h1 { font-size: 34px; font-weight: 700; letter-spacing: -.02em; }
+  .page .sub { margin-top: 8px; font-size: 17px; color: #64748b; }
+
+  .diagram-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 24px;
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+    padding: 28px 32px 24px;
+    margin: 0 auto 34px;
+    max-width: 1180px;
+  }
+  .diagram-head { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .cat-badge {
+    font-size: 14px; font-weight: 700; letter-spacing: .04em;
+    padding: 7px 14px; border-radius: 999px; color: #fff;
+  }
+  .diagram-head h2 { font-size: 22px; font-weight: 700; }
+  .diagram-note { font-size: 15px; color: #64748b; margin-bottom: 14px; }
+  svg { width: 100%; height: auto; display: block; }
+
+  /* warna kategori mengikuti file asli */
+  .c1 { --col: #6366f1; } .c2 { --col: #0ea5e9; } .c3 { --col: #f59e0b; }
+  .c4 { --col: #ef4444; } .c5 { --col: #10b981; } .c6 { --col: #8b5cf6; }
+  .cat-badge { background: var(--col); }
+
+  .legend {
+    max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 22px;
+    justify-content: center; font-size: 15px; color: #475569; padding-top: 4px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .lg-actor { width: 18px; height: 18px; border: 2px solid #334155; border-radius: 50%; }
+  .lg-uc { width: 30px; height: 16px; border: 2px solid #94a3b8; border-radius: 999px; background: #fff; }
+  .lg-sys { width: 20px; height: 16px; border: 2px dashed #64748b; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <header class="page">
+    <div class="eyebrow">AI-Driven Companion Web App × Ecount ERP</div>
+    <h1>Use Case Diagram per Kategori</h1>
+    <p class="sub">6 diagram UML — 12 use case dikelompokkan ke dalam 6 kategori alur bisnis</p>
+  </header>
+
+  <div id="diagrams"></div>
+
+  <div class="legend">
+    <span><span class="lg-actor"></span> Aktor</span>
+    <span><span class="lg-uc"></span> Use Case</span>
+    <span><span class="lg-sys"></span> Sistem Pendukung (Ecount ERP / AI Engine)</span>
+    <span>&larr;&rarr; Asosiasi &nbsp;·&nbsp; &#8226;&#8226;&#8226; «include» ke sistem</span>
+  </div>
+
+<script>
+/* ===== Data 6 kategori =====
+   Tiap kategori: aktor di kiri & kanan, use case di tengah.
+   assoc: pasangan [indeks aktor, indeks use case] -> garis asosiasi.
+   Semua use case terhubung ke blok sistem (include) secara otomatis. */
+const CATS = [
+  {
+    key: "c1", color: "#6366f1", name: "Eksekutif & Analisis",
+    note: "UC-01, UC-02 — pemantauan dashboard & prediksi stok berbasis AI.",
+    actorsL: ["Direksi"],
+    actorsR: ["Purchasing"],
+    usecases: ["UC-01 Memantau Dashboard Eksekutif", "UC-02 Melihat Prediksi & Alert Stok"],
+    assoc: [[0,0],[0,1],[1,1]]
+  },
+  {
+    key: "c2", color: "#0ea5e9", name: "Rantai Pasok",
+    note: "UC-03, UC-04 — pemilihan penawaran vendor & rekomendasi perpindahan stok.",
+    actorsL: ["Vendor", "Kepala Gudang"],
+    actorsR: ["Purchasing"],
+    usecases: ["UC-03 Mengajukan & Memilih Penawaran Vendor", "UC-04 Menyetujui Rekomendasi Perpindahan Stok"],
+    assoc: [[0,0],[2,0],[1,1]]
+  },
+  {
+    key: "c3", color: "#f59e0b", name: "Lapangan & QC",
+    note: "UC-05, UC-06 — stock opname via barcode & analisis cacat produk.",
+    actorsL: ["Staf Gudang", "Staf QC"],
+    actorsR: ["Manajer Produksi"],
+    usecases: ["UC-05 Stock Opname via Scan Barcode", "UC-06 Mencatat & Menganalisis Cacat Produk"],
+    assoc: [[0,0],[1,1],[2,1]]
+  },
+  {
+    key: "c4", color: "#ef4444", name: "Purna Jual",
+    note: "UC-07 — pengajuan klaim garansi dengan validasi faktur otomatis.",
+    actorsL: ["Pelanggan"],
+    actorsR: [],
+    usecases: ["UC-07 Mengajukan Klaim Garansi"],
+    assoc: [[0,0]]
+  },
+  {
+    key: "c5", color: "#10b981", name: "Klien Eksternal",
+    note: "UC-08, UC-09, UC-10 — portal B2B, chatbot stok/status & tindak lanjut klien berisiko.",
+    actorsL: ["Distributor", "Pelanggan"],
+    actorsR: ["Sales"],
+    usecases: ["UC-08 Memesan Produk via Portal B2B", "UC-09 Menanyakan Stok/Status via Chatbot", "UC-10 Menindaklanjuti Klien Berisiko"],
+    assoc: [[0,0],[1,1],[2,2]]
+  },
+  {
+    key: "c6", color: "#8b5cf6", name: "SDM & Kolaborasi",
+    note: "UC-11, UC-12 — pemantauan KPI & pengelolaan tugas lintas divisi.",
+    actorsL: ["Sales", "Semua Divisi"],
+    actorsR: ["Manajer Sales"],
+    usecases: ["UC-11 Memantau Pencapaian KPI", "UC-12 Mengelola Tugas Lintas Divisi"],
+    assoc: [[0,0],[2,0],[1,1]]
+  }
+];
+
+/* ---- helper SVG ---- */
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, text) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text != null) n.textContent = text;
+  return n;
+}
+/* bungkus teks jadi beberapa baris (perkiraan lebar karakter) */
+function wrap(text, maxChars) {
+  const words = text.split(" ");
+  const lines = []; let line = "";
+  for (const w of words) {
+    if ((line + " " + w).trim().length > maxChars) { if (line) lines.push(line); line = w; }
+    else line = (line + " " + w).trim();
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/* gambar aktor stick-figure, mengembalikan titik sambung (x kanan/kiri, y tengah) */
+function drawActor(svg, cx, cy, label, side) {
+  const g = el("g");
+  const head = el("circle", { cx, cy: cy - 26, r: 11, fill: "#fff", stroke: "#334155", "stroke-width": 2.5 });
+  const body = el("line", { x1: cx, y1: cy - 15, x2: cx, y2: cy + 10, stroke: "#334155", "stroke-width": 2.5 });
+  const arms = el("line", { x1: cx - 15, y1: cy - 6, x2: cx + 15, y2: cy - 6, stroke: "#334155", "stroke-width": 2.5 });
+  const legL = el("line", { x1: cx, y1: cy + 10, x2: cx - 12, y2: cy + 28, stroke: "#334155", "stroke-width": 2.5 });
+  const legR = el("line", { x1: cx, y1: cy + 10, x2: cx + 12, y2: cy + 28, stroke: "#334155", "stroke-width": 2.5 });
+  g.append(head, body, arms, legL, legR);
+  wrap(label, 14).forEach((ln, i) =>
+    g.append(el("text", { x: cx, y: cy + 46 + i * 16, "text-anchor": "middle",
+      "font-size": 14, "font-weight": 600, fill: "#1e293b" }, ln)));
+  svg.append(g);
+  return { x: side === "L" ? cx + 15 : cx - 15, y: cy - 6 };
+}
+
+/* gambar oval use case, mengembalikan titik sambung kiri & kanan */
+function drawUseCase(svg, cx, cy, label, color) {
+  const rx = 150, ry = 42;
+  const g = el("g");
+  g.append(el("ellipse", { cx, cy, rx, ry, fill: "#ffffff", stroke: color, "stroke-width": 2.5 }));
+  const lines = wrap(label, 22);
+  const startY = cy - (lines.length - 1) * 9;
+  lines.forEach((ln, i) =>
+    g.append(el("text", { x: cx, y: startY + i * 18 + 5, "text-anchor": "middle",
+      "font-size": 14.5, "font-weight": 600, fill: "#0f172a" }, ln)));
+  svg.append(g);
+  return { left: { x: cx - rx, y: cy }, right: { x: cx + rx, y: cy } };
+}
+
+function buildDiagram(cat) {
+  const card = document.createElement("div");
+  card.className = "diagram-card " + cat.key;
+
+  const head = document.createElement("div");
+  head.className = "diagram-head";
+  const badge = document.createElement("span");
+  badge.className = "cat-badge";
+  badge.textContent = cat.name;
+  const h2 = document.createElement("h2");
+  h2.textContent = "Use Case Diagram — " + cat.name;
+  head.append(badge, h2);
+  card.append(head);
+
+  const note = document.createElement("div");
+  note.className = "diagram-note";
+  note.textContent = cat.note;
+  card.append(note);
+
+  /* layout */
+  const n = cat.usecases.length;
+  const rowH = 150;
+  const topPad = 70, botPad = 50;
+  const W = 1100;
+  const ucX = W / 2;
+  const actorLX = 120, actorRX = W - 120;
+  const H = topPad + n * rowH + botPad;
+
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+    "aria-label": "Use case diagram " + cat.name });
+
+  /* arrow marker */
+  const defs = el("defs");
+  const marker = el("marker", { id: "arw-" + cat.key, viewBox: "0 0 10 10",
+    refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" });
+  marker.append(el("path", { d: "M0,0 L10,5 L0,10 z", fill: "#94a3b8" }));
+  defs.append(marker);
+  svg.append(defs);
+
+  /* kotak batas sistem (system boundary) */
+  const bx = 290, bw = W - 580;
+  svg.append(el("rect", { x: bx, y: 40, width: bw, height: H - 80, rx: 18,
+    fill: "rgba(248,250,252,0.6)", stroke: cat.color, "stroke-width": 2, "stroke-dasharray": "2 0", opacity: .5 }));
+  svg.append(el("text", { x: bx + 16, y: 64, "font-size": 13, "font-weight": 700,
+    fill: cat.color, "letter-spacing": ".06em" }, "AI-DRIVEN COMPANION WEB APP"));
+
+  /* use case di tengah */
+  const ucPorts = cat.usecases.map((uc, i) =>
+    drawUseCase(svg, ucX, topPad + i * rowH + rowH / 2, uc, cat.color));
+
+  /* aktor kiri & kanan */
+  const yFor = i => topPad + (i + 0.5) * (n * rowH) / Math.max(cat.actorsL.length, 1);
+  const spread = (count) => (idx) => topPad + ((idx + 0.5) * (n * rowH)) / count;
+
+  const leftPorts = [];
+  const spL = spread(cat.actorsL.length || 1);
+  cat.actorsL.forEach((a, i) => leftPorts.push(drawActor(svg, actorLX, spL(i), a, "L")));
+  const rightPorts = [];
+  const spR = spread(cat.actorsR.length || 1);
+  cat.actorsR.forEach((a, i) => rightPorts.push(drawActor(svg, actorRX, spR(i), a, "R")));
+
+  /* actors flat index: kiri dulu lalu kanan */
+  const actorPort = (idx) => idx < leftPorts.length
+    ? { p: leftPorts[idx], side: "L" }
+    : { p: rightPorts[idx - leftPorts.length], side: "R" };
+
+  /* garis asosiasi aktor -> use case */
+  cat.assoc.forEach(([ai, ui]) => {
+    const { p, side } = actorPort(ai);
+    const uc = side === "L" ? ucPorts[ui].left : ucPorts[ui].right;
+    svg.insertBefore(el("line", { x1: p.x, y1: p.y, x2: uc.x, y2: uc.y,
+      stroke: "#94a3b8", "stroke-width": 2 }), svg.firstChild.nextSibling);
+  });
+
+  /* blok sistem pendukung di bawah + include dari tiap use case */
+  const sysY = H - 46, sysX = ucX, sysW = 360, sysH = 54;
+  const sys = el("g");
+  sys.append(el("rect", { x: sysX - sysW / 2, y: sysY - sysH / 2, width: sysW, height: sysH, rx: 8,
+    fill: "#fff", stroke: "#64748b", "stroke-width": 2, "stroke-dasharray": "7 5" }));
+  sys.append(el("text", { x: sysX, y: sysY - 4, "text-anchor": "middle",
+    "font-size": 14, "font-weight": 700, fill: "#334155" }, "Ecount ERP (API) + AI Engine"));
+  sys.append(el("text", { x: sysX, y: sysY + 15, "text-anchor": "middle",
+    "font-size": 12, fill: "#64748b" }, "«sistem pendukung»"));
+  svg.append(sys);
+
+  ucPorts.forEach((uc, i) => {
+    const x1 = ucX, y1 = topPad + i * rowH + rowH / 2 + 42;
+    const line = el("line", { x1, y1, x2: sysX, y2: sysY - sysH / 2,
+      stroke: "#94a3b8", "stroke-width": 1.8, "stroke-dasharray": "5 5",
+      "marker-end": "url(#arw-" + cat.key + ")" });
+    svg.insertBefore(line, sys);
+    const mx = (x1 + sysX) / 2 + (i % 2 ? 60 : -60), my = (y1 + sysY - sysH / 2) / 2;
+    svg.insertBefore(el("text", { x: mx, y: my, "text-anchor": "middle",
+      "font-size": 12, "font-style": "italic", fill: "#64748b" }, "«include»"), sys);
+  });
+
+  card.append(svg);
+  return card;
+}
+
+const container = document.getElementById("diagrams");
+CATS.forEach(c => container.append(buildDiagram(c)));
+</script>
+</body>
+</html>
